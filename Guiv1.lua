@@ -1,71 +1,66 @@
 local player = game:GetService("Players").LocalPlayer
+local runService = game:GetService("RunService")
 
--- 1. Tạo ScreenGui chính
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "UniversalSpeedGUI"
-screenGui.ResetOnSpawn = false
+-- Tạo GUI
+local sg = Instance.new("ScreenGui")
+sg.Name = "UltimateSpeed"
+sg.ResetOnSpawn = false
+-- Thử đưa vào CoreGui để không bị game xóa, nếu không được thì vào PlayerGui
+pcall(function() sg.Parent = game:GetService("CoreGui") end)
+if not sg.Parent then sg.Parent = player:WaitForChild("PlayerGui") end
 
--- Đưa GUI vào CoreGui (dành cho Executor) để ẩn khỏi game, nếu lỗi thì dùng PlayerGui
-local success, err = pcall(function()
-    screenGui.Parent = game:GetService("CoreGui")
-end)
-if not success then
-    screenGui.Parent = player:WaitForChild("PlayerGui")
-end
-
--- 2. Tạo Khung (Frame) nền có thể kéo thả
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 200, 0, 150)
-frame.Position = UDim2.new(0.5, -100, 0.5, -75)
-frame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-frame.BorderSizePixel = 0
+frame.Size = UDim2.new(0, 160, 0, 100)
+frame.Position = UDim2.new(0.5, -80, 0.1, 0)
+frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 frame.Active = true
-frame.Draggable = true -- Cho phép dùng chuột kéo bảng GUI đi chỗ khác
-frame.Parent = screenGui
+frame.Draggable = true -- Có thể cầm chuột kéo đi
+frame.Parent = sg
 
--- 3. Tạo Tiêu đề
-local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, 0, 0, 30)
-title.Text = "Hack Tốc Độ"
-title.TextColor3 = Color3.fromRGB(255, 255, 255)
-title.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-title.Font = Enum.Font.SourceSansBold
-title.TextSize = 18
-title.Parent = frame
+local box = Instance.new("TextBox")
+box.Size = UDim2.new(0.9, 0, 0, 30)
+box.Position = UDim2.new(0.05, 0, 0.1, 0)
+box.PlaceholderText = "Tốc độ..."
+box.Text = "50"
+box.Parent = frame
 
--- 4. Tạo Ô nhập số (TextBox)
-local speedInput = Instance.new("TextBox")
-speedInput.Size = UDim2.new(0.8, 0, 0, 35)
-speedInput.Position = UDim2.new(0.1, 0, 0.35, 0)
-speedInput.Text = "50"
-speedInput.PlaceholderText = "Nhập tốc độ..."
-speedInput.BackgroundColor3 = Color3.fromRGB(220, 220, 220)
-speedInput.TextColor3 = Color3.fromRGB(0, 0, 0)
-speedInput.Font = Enum.Font.SourceSansBold
-speedInput.TextSize = 20
-speedInput.Parent = frame
+local btn = Instance.new("TextButton")
+btn.Size = UDim2.new(0.9, 0, 0, 40)
+btn.Position = UDim2.new(0.05, 0, 0.5, 0)
+btn.Text = "KÍCH HOẠT"
+btn.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+btn.Parent = frame
 
--- 5. Tạo Nút áp dụng (TextButton)
-local applyButton = Instance.new("TextButton")
-applyButton.Size = UDim2.new(0.8, 0, 0, 35)
-applyButton.Position = UDim2.new(0.1, 0, 0.65, 0)
-applyButton.Text = "Chạy ngay!"
-applyButton.BackgroundColor3 = Color3.fromRGB(255, 85, 0)
-applyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-applyButton.Font = Enum.Font.SourceSansBold
-applyButton.TextSize = 20
-applyButton.Parent = frame
+-- Biến lưu trạng thái
+local targetSpeed = 16
+local toggled = false
 
--- 6. Chức năng đổi tốc độ
-applyButton.MouseButton1Click:Connect(function()
-    local newSpeed = tonumber(speedInput.Text)
-    
-    if newSpeed then
-        local character = player.Character or player.CharacterAdded:Wait()
-        local humanoid = character:FindFirstChildOfClass("Humanoid")
-        
-        if humanoid then
-            humanoid.WalkSpeed = newSpeed
+btn.MouseButton1Click:Connect(function()
+    toggled = not toggled
+    if toggled then
+        targetSpeed = tonumber(box.Text) or 16
+        btn.Text = "ĐANG CHẠY (" .. targetSpeed .. ")"
+        btn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+    else
+        btn.Text = "KÍCH HOẠT"
+        btn.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+        -- Trả về tốc độ mặc định
+        local char = player.Character
+        if char and char:FindFirstChild("Humanoid") then
+            char.Humanoid.WalkSpeed = 16
+        end
+    end
+end)
+
+-- Vòng lặp quan trọng nhất: Ép tốc độ liên tục
+runService.Heartbeat:Connect(function()
+    if toggled then
+        local char = player.Character
+        if char then
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            if hum then
+                hum.WalkSpeed = targetSpeed
+            end
         end
     end
 end)
