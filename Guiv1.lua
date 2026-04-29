@@ -1,25 +1,34 @@
-local player = game.Players.LocalPlayer
+local player = game:GetService("Players").LocalPlayer
 
 -- 1. Tạo ScreenGui chính
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "SpeedGUI"
+screenGui.Name = "UniversalSpeedGUI"
 screenGui.ResetOnSpawn = false
-screenGui.Parent = player:WaitForChild("PlayerGui")
 
--- 2. Tạo Khung (Frame) nền
+-- Đưa GUI vào CoreGui (dành cho Executor) để ẩn khỏi game, nếu lỗi thì dùng PlayerGui
+local success, err = pcall(function()
+    screenGui.Parent = game:GetService("CoreGui")
+end)
+if not success then
+    screenGui.Parent = player:WaitForChild("PlayerGui")
+end
+
+-- 2. Tạo Khung (Frame) nền có thể kéo thả
 local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0, 200, 0, 150)
-frame.Position = UDim2.new(0.5, -100, 0.5, -75) -- Giữa màn hình
-frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-frame.BorderSizePixel = 2
+frame.Position = UDim2.new(0.5, -100, 0.5, -75)
+frame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+frame.BorderSizePixel = 0
+frame.Active = true
+frame.Draggable = true -- Cho phép dùng chuột kéo bảng GUI đi chỗ khác
 frame.Parent = screenGui
 
 -- 3. Tạo Tiêu đề
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, 0, 0, 30)
-title.Text = "Điều chỉnh tốc độ"
+title.Text = "Hack Tốc Độ"
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
-title.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+title.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 title.Font = Enum.Font.SourceSansBold
 title.TextSize = 18
 title.Parent = frame
@@ -28,11 +37,11 @@ title.Parent = frame
 local speedInput = Instance.new("TextBox")
 speedInput.Size = UDim2.new(0.8, 0, 0, 35)
 speedInput.Position = UDim2.new(0.1, 0, 0.35, 0)
-speedInput.Text = "16" -- Tốc độ mặc định của Roblox
+speedInput.Text = "50"
 speedInput.PlaceholderText = "Nhập tốc độ..."
-speedInput.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+speedInput.BackgroundColor3 = Color3.fromRGB(220, 220, 220)
 speedInput.TextColor3 = Color3.fromRGB(0, 0, 0)
-speedInput.Font = Enum.Font.SourceSans
+speedInput.Font = Enum.Font.SourceSansBold
 speedInput.TextSize = 20
 speedInput.Parent = frame
 
@@ -40,35 +49,23 @@ speedInput.Parent = frame
 local applyButton = Instance.new("TextButton")
 applyButton.Size = UDim2.new(0.8, 0, 0, 35)
 applyButton.Position = UDim2.new(0.1, 0, 0.65, 0)
-applyButton.Text = "Áp dụng"
-applyButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+applyButton.Text = "Chạy ngay!"
+applyButton.BackgroundColor3 = Color3.fromRGB(255, 85, 0)
 applyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 applyButton.Font = Enum.Font.SourceSansBold
 applyButton.TextSize = 20
 applyButton.Parent = frame
 
--- 6. Viết chức năng thay đổi tốc độ khi bấm nút
+-- 6. Chức năng đổi tốc độ
 applyButton.MouseButton1Click:Connect(function()
-    -- Lấy số từ ô nhập
     local newSpeed = tonumber(speedInput.Text)
     
-    -- Kiểm tra xem người dùng có nhập đúng số không
     if newSpeed then
         local character = player.Character or player.CharacterAdded:Wait()
         local humanoid = character:FindFirstChildOfClass("Humanoid")
         
         if humanoid then
             humanoid.WalkSpeed = newSpeed
-            applyButton.Text = "Thành công!"
-            task.wait(1)
-            applyButton.Text = "Áp dụng"
         end
-    else
-        -- Nếu nhập sai (nhập chữ), báo lỗi
-        speedInput.Text = ""
-        speedInput.PlaceholderText = "Vui lòng nhập SỐ!"
-        task.wait(1.5)
-        speedInput.PlaceholderText = "Nhập tốc độ..."
-        speedInput.Text = "16"
     end
 end)
